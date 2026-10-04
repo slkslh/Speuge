@@ -1,0 +1,33 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon\r
+._*
+.Spotlight-V100
+.Trashes
+
+# Swift & Swift Package Manager Build Artifacts
+.build/
+.swiftpm/
+DerivedData/
+
+# Xcode Project & User State
+*.xcodeproj
+*.xcworkspace
+*.xcuserdatad
+xcuserdata/
+
+# Application Bundle & Release Archives (Distribute via GitHub Releases)
+*.app/
+*.dmg
+*.zip
+temp_installer.dmg
+*.dSYM/
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
