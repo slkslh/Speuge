@@ -55,7 +55,6 @@ private struct UsageFiltersHeader: View {
             
             Spacer()
         }
-        .padding(.leading, -12)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
