@@ -357,7 +357,7 @@ struct MenuBarPopoverView: View {
             
             // Menu actions
             VStack(spacing: 2) {
-                MenuButton(title: "Open Network Speed…", icon: "speedometer", shortcut: "o") {
+                MenuButton(title: "Open Speuge…", icon: "speedometer", shortcut: "o") {
                     AppDelegate.shared?.openDashboard()
                     AppDelegate.shared?.closePopover()
                 }
@@ -369,7 +369,7 @@ struct MenuBarPopoverView: View {
                 
                 Divider().padding(.vertical, 4).padding(.horizontal, 6)
                 
-                MenuButton(title: "Quit Network Speed", icon: "xmark.circle") {
+                MenuButton(title: "Quit Speuge", icon: "xmark.circle") {
                     AppDelegate.shared?.quitApp()
                 }
             }

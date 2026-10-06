@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-APP_NAME="NetworkSpeed"
-VOL_NAME="NetworkSpeed"
+APP_NAME="Speuge"
+VOL_NAME="Speuge"
 FINAL_DMG="${APP_NAME}.dmg"
 TMP_DMG="temp_installer.dmg"
 

@@ -8,7 +8,7 @@ public final class AppNavigation: ObservableObject {
 
     @Published public var selectedTab: AppTab = .dashboard
 
-    /// Filled in by the scene bridges (see NetworkSpeedApp.swift).
+    /// Filled in by the scene bridges (see SpeugeApp.swift).
     var openMainWindow: (() -> Void)?
 
     private init() {}

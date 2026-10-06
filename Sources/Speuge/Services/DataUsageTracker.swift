@@ -47,7 +47,7 @@ public final class DataUsageTracker: ObservableObject {
     
     private let fileURL: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let appDir = appSupport.appendingPathComponent("NetworkSpeed", isDirectory: true)
+        let appDir = appSupport.appendingPathComponent("Speuge", isDirectory: true)
         try? FileManager.default.createDirectory(at: appDir, withIntermediateDirectories: true)
         return appDir.appendingPathComponent("data_usage.json")
     }()

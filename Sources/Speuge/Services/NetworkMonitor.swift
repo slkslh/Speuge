@@ -263,13 +263,13 @@ public final class NetworkMonitor: @unchecked Sendable {
         let newTimer = DispatchSource.makeTimerSource(queue: sampleQueue)
         newTimer.schedule(deadline: .now(), repeating: interval)
         newTimer.setEventHandler { [weak self] in
-            self?.sampleNetworkSpeed(selectedMode: selectedSetting, primaryBSD: currentPrimary)
+            self?.sampleSpeuge(selectedMode: selectedSetting, primaryBSD: currentPrimary)
         }
         newTimer.resume()
         self.timer = newTimer
     }
     
-    private func sampleNetworkSpeed(selectedMode: String, primaryBSD: String) {
+    private func sampleSpeuge(selectedMode: String, primaryBSD: String) {
         let (bytesIn, bytesOut) = getNetworkBytes(selectedMode: selectedMode, primaryBSD: primaryBSD)
         let now = CACurrentMediaTime()
         

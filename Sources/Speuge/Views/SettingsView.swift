@@ -15,7 +15,7 @@ public struct SettingsView: View {
             DataSettingsSection()
             
             Section {
-                Button("Quit Network Speed", role: .destructive) {
+                Button("Quit Speuge", role: .destructive) {
                     AppDelegate.shared?.quitApp()
                 }
             } header: {

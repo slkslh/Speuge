@@ -2,13 +2,13 @@ import SwiftUI
 import AppKit
 
 @main
-public struct NetworkSpeedApp: App {
+public struct SpeugeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     public init() {}
 
     public var body: some Scene {
-        Window("Network Speed", id: "main") {
+        Window("Speuge", id: "main") {
             MainAppView()
                 .background {
                     SceneActionsBridge()
@@ -24,7 +24,7 @@ public struct NetworkSpeedApp: App {
 struct AppCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About Network Speed") {
+            Button("About Speuge") {
                 NSApp.orderFrontStandardAboutPanel(nil)
             }
         }

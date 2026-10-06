@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-APP_NAME="NetworkSpeed"
+APP_NAME="Speuge"
 BUNDLE_DIR="${APP_NAME}.app"
 CONTENTS_DIR="${BUNDLE_DIR}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
 RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 
 echo "🚀 Building ${APP_NAME} via Xcode (Release)..."
-xcodebuild build -project NetworkSpeed.xcodeproj -scheme NetworkSpeed -configuration Release CONFIGURATION_BUILD_DIR="${PWD}/build" -quiet
+xcodebuild build -project Speuge.xcodeproj -scheme Speuge -configuration Release CONFIGURATION_BUILD_DIR="${PWD}/build" CODE_SIGNING_ALLOWED=NO -quiet
 
 echo "📦 Preparing ${BUNDLE_DIR}..."
 rm -rf "${BUNDLE_DIR}"

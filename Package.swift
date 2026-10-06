@@ -2,20 +2,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "NetworkSpeed",
+    name: "Speuge",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "NetworkSpeed",
-            targets: ["NetworkSpeed"]
+            name: "Speuge",
+            targets: ["Speuge"]
         )
     ],
     targets: [
         .executableTarget(
-            name: "NetworkSpeed",
-            path: "Sources/NetworkSpeed"
+            name: "Speuge",
+            path: "Sources/Speuge"
         )
     ]
 )

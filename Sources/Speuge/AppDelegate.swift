@@ -3,7 +3,7 @@ import SwiftUI
 
 /// AppKit is only used here for things SwiftUI cannot do:
 /// the custom-drawn status item, its dropdown menu/popover, and the Dock activation policy.
-/// The main menu bar is now provided by `AppCommands` (NetworkSpeedApp.swift).
+/// The main menu bar is now provided by `AppCommands` (SpeugeApp.swift).
 @MainActor
 public final class AppDelegate: NSObject, NSApplicationDelegate {
     public static private(set) weak var shared: AppDelegate?
