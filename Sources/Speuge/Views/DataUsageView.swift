@@ -47,14 +47,15 @@ private struct UsageFiltersHeader: View {
         HStack {
             Picker(selection: $tracker.granularity, label: EmptyView()) {
                 ForEach([UsageGranularity.day, UsageGranularity.week]) { granularity in
-                    Text(granularity.rawValue).tag(granularity)
+                    Text("     \(granularity.rawValue)     ").tag(granularity)
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 200)
+            .labelsHidden()
             
             Spacer()
         }
+        .padding(.leading, -20)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
