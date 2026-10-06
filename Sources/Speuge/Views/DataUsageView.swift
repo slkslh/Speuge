@@ -44,14 +44,18 @@ private struct UsageFiltersHeader: View {
             }
         }
         
-        Picker("Period", selection: $tracker.granularity) {
-            ForEach([UsageGranularity.day, UsageGranularity.week]) { granularity in
-                Text(granularity.rawValue).tag(granularity)
+        HStack {
+            Picker("Period", selection: $tracker.granularity) {
+                ForEach([UsageGranularity.day, UsageGranularity.week]) { granularity in
+                    Text(granularity.rawValue).tag(granularity)
+                }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 200)
+            
+            Spacer()
         }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .frame(width: 160)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
