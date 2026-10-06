@@ -45,13 +45,12 @@ private struct UsageFiltersHeader: View {
         }
         
         HStack {
-            Picker("Period", selection: $tracker.granularity) {
+            Picker(selection: $tracker.granularity, label: EmptyView()) {
                 ForEach([UsageGranularity.day, UsageGranularity.week]) { granularity in
                     Text(granularity.rawValue).tag(granularity)
                 }
             }
             .pickerStyle(.segmented)
-            .labelsHidden()
             .frame(width: 200)
             
             Spacer()
