@@ -93,6 +93,10 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(fixedWidthDigits, forKey: "fixedWidthDigits") }
     }
     
+    @Published public var showInDockWhenWindowOpen: Bool {
+        didSet { defaults.set(showInDockWhenWindowOpen, forKey: "showInDockWhenWindowOpen") }
+    }
+    
     @Published public var isMonitoringEnabled: Bool {
         didSet {
             defaults.set(isMonitoringEnabled, forKey: "isMonitoringEnabled")
@@ -105,12 +109,18 @@ public final class AppSettings: ObservableObject {
     }
     
     public init() {
+        if defaults.object(forKey: "showInDockWhenWindowOpen") != nil {
+            self.showInDockWhenWindowOpen = defaults.bool(forKey: "showInDockWhenWindowOpen")
+        } else {
+            self.showInDockWhenWindowOpen = true
+        }
+        
         if defaults.object(forKey: "isMonitoringEnabled") != nil {
             self.isMonitoringEnabled = defaults.bool(forKey: "isMonitoringEnabled")
         } else {
             self.isMonitoringEnabled = true
         }
-        if let modeStr = defaults.string(forKey: "displayMode"), let mode = DisplayMode(rawValue: modeStr) {
+        if let modeStr = defaults.string(forKey: "displayMode"), let mode = DisplayMode(rawValue: modeStr), mode != .singleLine {
             self.displayMode = mode
         } else {
             self.displayMode = .stacked

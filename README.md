@@ -25,22 +25,22 @@ Built natively using **Swift**, **AppKit**, and **SwiftUI** with zero external d
   - Direction indicators: Triangles (`▲`/`▼`), arrows (`↑`/`↓`), or letters (`U:`/`D:`).
   - Native vibrancy with automatic light/dark mode support.
 
-- **📊 Modern Dashboard (Left-Click)**:
-  - **Live Speed Readouts**: Real-time upload and download speeds with peak metrics.
-  - **Session Metrics**: Tracks total session upload and download volume.
-  - **Live Activity Graph**: Hardware-accelerated 60-second dual sparkline canvas chart.
-  - **Active Interface & IP Badge**: Displays active network adapter and local IP with one-click clipboard copy.
+- **🖥️ Full Native macOS Application**:
+  - **Apple HIG Sidebar Navigation**: Native macOS sidebar with colored squircle glyphs (Dashboard, Network Usage, Interfaces, Settings, About) matching macOS System Settings.
+  - **Live Dashboard (`⌘1`)**: Hero speed cards (Download & Upload in system blue and orange), large 60-second real-time throughput graph with peak markers, connection telemetry (active interface, IP with copy button, gateway, session uptime).
+  - **Network Usage & App Breakdown (`⌘2`)**: Full Apple Screen Time style analytics with **Day** and **Week** views, 24-hour hourly timeline, 7-day stacked download/upload bar charts with average guidelines, and per-process drilldown with authentic app icons.
+  - **Network Interfaces (`⌘3`)**: Hardware and virtual adapter inspector (Wi-Fi, Ethernet, Thunderbolt, Bridges) with BSD names, primary badges, and telemetry selector.
+  - **System Settings (`⌘4` / `⌘,`)**: Grouped preferences for menu bar appearance, update frequency, unit standard (Binary 1024 vs Decimal 1000), launch at login, and data storage management.
+  - **About Window (`⌘5`)**: Authentic Apple HIG About pane with full Retina app icon, version, and architecture specifications.
 
-- **⚙️ User Preferences**:
-  - **Display Styles**: Stacked (2-line), Inline (1-line), Download Only, Upload Only.
-  - **Display Order**: Download first or Upload first.
-  - **Update Frequency**: 0.5s (Fast), 1.0s (Normal), 2.0s (Eco).
-  - **Calculation Standard**: Binary (1024) or Decimal (1000).
-  - **Interface Selector**: Monitor all active interfaces combined or lock to a specific adapter.
-  - **Launch at Login**: Native integration with macOS `SMAppService`.
+- **⚡ Lightweight, Glanceable Menu Bar Popover**:
+  - Uncluttered, responsive popover matching Apple Control Center & Wi-Fi extras.
+  - Glanceable download/upload throughput with 60-second mini sparkline.
+  - Quick network status, copyable local IP, and today's total data usage pill.
+  - Instant one-click shortcuts to open any section in the main application.
 
-- **🖱️ Quick Context Menu (Right-Click)**:
-  - Fast access to Open Dashboard, Reset Session Stats, Change Display Style, Switch Refresh Rate, and Quit.
+- **🖱️ Quick Context Menu (Right-Click Status Item)**:
+  - Fast access to Open Network Speed (`⌘D`), Data Usage Window (`⌘U`), Interfaces, Settings (`⌘,`), Reset Session Stats, Display Style, Refresh Rate, and Quit.
 
 ---
 
@@ -97,12 +97,17 @@ NetworkSpeed/
 │       ├── AppDelegate.swift          # StatusItem, floating panel & context menu
 │       ├── Models/
 │       │   ├── AppSettings.swift      # Persistent user preferences (UserDefaults)
+│       │   ├── DataUsageModels.swift  # Data usage snapshots, time filters & process models
 │       │   ├── NetworkStats.swift     # Observable state, rolling history & metrics
 │       │   └── SpeedFormatter.swift   # Dynamic B/s, KB/s, MB/s, GB/s unit formatting
 │       ├── Services/
+│       │   ├── AppInfoResolver.swift  # Process bundle & app icon metadata resolver
+│       │   ├── DataUsageTracker.swift # Per-app network sampler & persistent store
 │       │   ├── LaunchAtLogin.swift    # macOS SMAppService login helper
 │       │   └── NetworkMonitor.swift   # Low-overhead 64-bit kernel sysctl sampler
 │       └── Views/
+│           ├── DataUsageView.swift    # App breakdown, Swift Charts timeline & search
+│           ├── DataUsageWindowController.swift # Standalone window controller (⌘U)
 │           ├── LiveHistoryChart.swift # Canvas-based real-time activity sparkline
 │           ├── MenuBarExtraPanel.swift# Custom floating glassmorphism panel
 │           ├── MenuBarView.swift      # Status item view drawing menu bar text

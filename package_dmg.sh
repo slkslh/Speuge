@@ -81,7 +81,8 @@ sleep 1
 SetFile -a V "${MOUNT_DIR}/.background" 2>/dev/null || true
 
 echo "🔒 Unmounting installer disk image..."
-hdiutil detach "${DEV_NAME}" > /dev/null || hdiutil detach "${MOUNT_DIR}" -force > /dev/null
+hdiutil detach "${DEV_NAME}" -force > /dev/null 2>&1 || hdiutil detach "${MOUNT_DIR}" -force > /dev/null 2>&1 || true
+sleep 2
 
 echo "🗜️ Compressing into production installer DMG..."
 hdiutil convert "${TMP_DMG}" -format UDZO -imagekey zlib-level=9 -o "${FINAL_DMG}" > /dev/null

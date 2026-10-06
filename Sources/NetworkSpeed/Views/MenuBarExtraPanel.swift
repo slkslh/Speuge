@@ -9,8 +9,8 @@ public final class MenuBarExtraPanel: NSPanel {
     private var hostingView: NSHostingView<PopoverView>?
     public var onClose: (() -> Void)?
     
-    private let panelWidth: CGFloat = 330
-    private let panelHeight: CGFloat = 442
+    private let panelWidth: CGFloat = 320
+    private let panelHeight: CGFloat = 415
     
     public init() {
         super.init(
