@@ -60,7 +60,7 @@ public struct MainAppView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text("Speuge")
                             .font(.headline)
                             .fontWeight(.semibold)
