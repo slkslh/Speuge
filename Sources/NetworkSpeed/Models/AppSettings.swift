@@ -97,6 +97,10 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(showInDockWhenWindowOpen, forKey: "showInDockWhenWindowOpen") }
     }
     
+    @Published public var keepRunningInMenuBar: Bool {
+        didSet { defaults.set(keepRunningInMenuBar, forKey: "keepRunningInMenuBar") }
+    }
+    
     @Published public var isMonitoringEnabled: Bool {
         didSet {
             defaults.set(isMonitoringEnabled, forKey: "isMonitoringEnabled")
@@ -113,6 +117,12 @@ public final class AppSettings: ObservableObject {
             self.showInDockWhenWindowOpen = defaults.bool(forKey: "showInDockWhenWindowOpen")
         } else {
             self.showInDockWhenWindowOpen = true
+        }
+        
+        if defaults.object(forKey: "keepRunningInMenuBar") != nil {
+            self.keepRunningInMenuBar = defaults.bool(forKey: "keepRunningInMenuBar")
+        } else {
+            self.keepRunningInMenuBar = true
         }
         
         if defaults.object(forKey: "isMonitoringEnabled") != nil {
@@ -135,13 +145,13 @@ public final class AppSettings: ObservableObject {
         if let arrowStr = defaults.string(forKey: "arrowStyle"), let arrow = ArrowStyle(rawValue: arrowStr) {
             self.arrowStyle = arrow
         } else {
-            self.arrowStyle = .triangle
+            self.arrowStyle = .arrow
         }
         
         if let colorStr = defaults.string(forKey: "colorMode"), let color = ArrowColorMode(rawValue: colorStr) {
             self.colorMode = color
         } else {
-            self.colorMode = .tinted
+            self.colorMode = .monochrome
         }
         
         if let baseStr = defaults.string(forKey: "unitBase"), let base = UnitBase(rawValue: baseStr) {

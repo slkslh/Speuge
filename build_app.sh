@@ -7,30 +7,12 @@ CONTENTS_DIR="${BUNDLE_DIR}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
 RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 
-echo "🚀 Building ${APP_NAME} Universal Binary (Apple Silicon + Intel)..."
-swift build -c release --arch arm64 --arch x86_64
+echo "🚀 Building ${APP_NAME} via Xcode (Release)..."
+xcodebuild build -project NetworkSpeed.xcodeproj -scheme NetworkSpeed -configuration Release CONFIGURATION_BUILD_DIR="${PWD}/build" -quiet
 
-echo "📦 Assembling ${BUNDLE_DIR}..."
+echo "📦 Preparing ${BUNDLE_DIR}..."
 rm -rf "${BUNDLE_DIR}"
-mkdir -p "${MACOS_DIR}"
-mkdir -p "${RESOURCES_DIR}"
-
-# Copy universal binary
-BIN_PATH="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
-if [ -f "${BIN_PATH}/${APP_NAME}" ]; then
-    cp "${BIN_PATH}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
-elif [ -f ".build/out/Products/Release/${APP_NAME}" ]; then
-    cp ".build/out/Products/Release/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
-fi
-chmod +x "${MACOS_DIR}/${APP_NAME}"
-
-# Copy Info.plist
-cp "AppResources/Info.plist" "${CONTENTS_DIR}/Info.plist"
-
-# Copy AppIcon.icns
-if [ -f "AppResources/AppIcon.icns" ]; then
-    cp "AppResources/AppIcon.icns" "${RESOURCES_DIR}/AppIcon.icns"
-fi
+cp -R "build/${BUNDLE_DIR}" .
 
 # Ad-hoc code signing
 echo "✍️ Signing application bundle..."

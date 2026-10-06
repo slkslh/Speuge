@@ -1,162 +1,89 @@
 import SwiftUI
-import AppKit
 
 public struct InterfacesView: View {
-    @ObservedObject var stats = NetworkStats.shared
-    @ObservedObject var settings = AppSettings.shared
-    
-    @State private var isRefreshing: Bool = false
-    
+    @ObservedObject private var stats = NetworkStats.shared
+    @ObservedObject private var settings = AppSettings.shared
+
     public init() {}
-    
+
     public var body: some View {
         Form {
-            SettingsHeroHeader(
-                icon: "network",
-                color: .blue,
-                title: "Interfaces",
-                subtitle: "Hardware network adapters, hardware addresses, and telemetry sources on this Mac."
-            )
-            
             Section {
                 if stats.availableInterfaces.isEmpty {
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 8) {
-                            Image(systemName: "network.slash")
-                                .font(.title)
-                                .foregroundStyle(.secondary)
-                            Text("No network interfaces detected")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 16)
-                        Spacer()
-                    }
+                    EmptyStateView(
+                        title: "No Network Interfaces",
+                        systemImage: "network.slash",
+                        message: "No network adapters were detected on this Mac."
+                    )
                 } else {
-                    ForEach(stats.availableInterfaces) { intf in
-                        interfaceRow(intf)
+                    ForEach(stats.availableInterfaces) { interface in
+                        interfaceRow(interface)
                     }
                 }
             } header: {
-                HStack {
-                    Text("Detected Interfaces (\(stats.availableInterfaces.count))")
-                        .font(.headline)
-                    Spacer()
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isRefreshing = true
-                        }
-                        NetworkMonitor.shared.refreshInterfacesList()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                            withAnimation { isRefreshing = false }
-                        }
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.clockwise")
-                                .rotationEffect(.degrees(isRefreshing ? 360 : 0))
-                                .animation(isRefreshing ? Animation.linear(duration: 0.6).repeatForever(autoreverses: false) : .default, value: isRefreshing)
-                            Text("Refresh")
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
+                Text("Detected Interfaces (\(stats.availableInterfaces.count))")
             } footer: {
-                Text("Select an interface to monitor dedicated adapter throughput, or configure Automatic interface selection in Settings.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text("Choose Monitor to track a single adapter. Automatic and All Interfaces are available from the Network Usage toolbar.")
             }
         }
         .formStyle(.grouped)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    NetworkMonitor.shared.refreshInterfacesList()
+                } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
+                .help("Refresh interface list")
+            }
+        }
     }
-    
-    @ViewBuilder
-    private func interfaceRow(_ intf: InterfaceInfo) -> some View {
-        let isCurrentTarget: Bool = {
-            if settings.selectedInterface == "auto" {
-                return intf.isPrimary
-            } else if settings.selectedInterface == "all" {
-                return true
+
+    private func isCurrentTarget(_ interface: InterfaceInfo) -> Bool {
+        switch settings.selectedInterface {
+        case "auto": return interface.isPrimary
+        case "all": return true
+        default: return settings.selectedInterface == interface.bsdName
+        }
+    }
+
+    private func symbol(for interface: InterfaceInfo) -> String {
+        let name = interface.displayName.lowercased()
+        if name.contains("wi-fi") || name.contains("wifi") || name.contains("airport") { return "wifi" }
+        if name.contains("ethernet") { return "cable.connector" }
+        if name.contains("thunderbolt") { return "bolt.horizontal" }
+        if name.contains("bridge") { return "point.3.connected.trianglepath.dotted" }
+        return "network"
+    }
+
+    private func interfaceRow(_ interface: InterfaceInfo) -> some View {
+        LabeledContent {
+            if isCurrentTarget(interface) {
+                Label("Active", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
             } else {
-                return settings.selectedInterface == intf.bsdName
+                Button("Monitor") {
+                    settings.selectedInterface = interface.bsdName
+                    NetworkMonitor.shared.updateInterval()
+                }
             }
-        }()
-        
-        let iconName: String = {
-            let lower = intf.displayName.lowercased()
-            if lower.contains("wi-fi") || lower.contains("wifi") || lower.contains("airport") {
-                return "wifi"
-            } else if lower.contains("ethernet") {
-                return "cable.connector"
-            } else if lower.contains("thunderbolt") {
-                return "bolt.horizontal.fill"
-            } else if lower.contains("bridge") {
-                return "point.3.connected.trianglepath.dotted"
-            } else {
-                return "network"
-            }
-        }()
-        
-        let iconColor: Color = {
-            let lower = intf.displayName.lowercased()
-            if lower.contains("wi-fi") || lower.contains("wifi") {
-                return .blue
-            } else if lower.contains("ethernet") {
-                return .orange
-            } else if lower.contains("thunderbolt") {
-                return .purple
-            } else {
-                return .teal
-            }
-        }()
-        
-        HStack(spacing: 12) {
+        } label: {
             Label {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(intf.displayName)
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                        
-                        if intf.isPrimary {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(interface.displayName)
+                        if interface.isPrimary {
                             Text("Primary")
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1.5)
-                                .background(Capsule().fill(Color.blue))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    
-                    Text("Identifier: \(intf.bsdName)")
+                    Text("Identifier: \(interface.bsdName)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             } icon: {
-                SettingsIconBadge(systemName: iconName, color: iconColor)
-            }
-            
-            Spacer()
-            
-            if isCurrentTarget {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark")
-                        .symbolRenderingMode(.hierarchical)
-                        .font(.caption.weight(.bold))
-                    Text("Active")
-                        .font(.caption.weight(.medium))
-                }
-                .foregroundStyle(.green)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(Color.green.opacity(0.12)))
-            } else {
-                Button("Monitor") {
-                    settings.selectedInterface = intf.bsdName
-                    NetworkMonitor.shared.updateInterval()
-                }
-                .buttonStyle(.bordered)
+                Image(systemName: symbol(for: interface))
             }
         }
     }

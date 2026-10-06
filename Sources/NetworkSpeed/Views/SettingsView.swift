@@ -1,256 +1,189 @@
 import SwiftUI
 import AppKit
 
+/// Content of the `Settings` scene (Cmd+,).
 public struct SettingsView: View {
-    @ObservedObject var settings = AppSettings.shared
-    @ObservedObject var stats = NetworkStats.shared
-    @ObservedObject var usageTracker = DataUsageTracker.shared
-    
-    @State private var isLaunchAtLogin = LaunchAtLogin.isEnabled
-    @State private var showingResetAlert = false
-    @State private var resetTarget: ResetTarget = .today
-    
-    enum ResetTarget {
-        case session
-        case today
-        case allHistory
-    }
-    
+    /// Settings scenes size to their content and a grouped Form has no intrinsic width.
+    private let pageWidth: CGFloat = 480
+
     public init() {}
-    
+
     public var body: some View {
         Form {
-            SettingsHeroHeader(
-                icon: "gearshape.fill",
-                color: .gray,
-                title: "General",
-                subtitle: "Configure menu bar indicators, display telemetry, update frequency, and system startup preferences."
-            )
+            GeneralSettingsSection()
+            MenuBarSettingsSection()
+            DataSettingsSection()
             
-            // Group 1: Menu Bar Display
             Section {
-                Picker(selection: $settings.displayMode) {
-                    ForEach(DisplayMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                } label: {
-                    Label("Display Style", badge: "macwindow", color: .blue)
-                }
-                .pickerStyle(.menu)
-                
-                Picker(selection: $settings.displayOrder) {
-                    ForEach(DisplayOrder.allCases) { order in
-                        Text(order.rawValue).tag(order)
-                    }
-                } label: {
-                    Label("Display Order", badge: "arrow.up.arrow.down", color: .teal)
-                }
-                .pickerStyle(.menu)
-                
-                Picker(selection: $settings.arrowStyle) {
-                    ForEach(ArrowStyle.allCases) { style in
-                        Text(style.rawValue).tag(style)
-                    }
-                } label: {
-                    Label("Indicator Glyphs", badge: "character.textbox", color: .indigo)
-                }
-                .pickerStyle(.menu)
-                
-                Picker(selection: $settings.colorMode) {
-                    ForEach(ArrowColorMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                } label: {
-                    Label("Color Theme", badge: "paintpalette.fill", color: .purple)
-                }
-                .pickerStyle(.menu)
-                
-                Toggle(isOn: $settings.fixedWidthDigits) {
-                    Label("Monospaced Digits", badge: "number.square.fill", color: .orange)
-                }
-                .toggleStyle(.switch)
-            } header: {
-                Text("Menu Bar Display")
-                    .font(.headline)
-            } footer: {
-                Text("Configure how bandwidth numbers and symbols appear in the macOS menu bar.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            // Group 2: Monitoring & Refresh
-            Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Label("Update Frequency", badge: "timer", color: .green)
-                        Spacer()
-                        Text(String(format: "%.1fs", settings.refreshInterval))
-                            .font(.body)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Slider(
-                        value: $settings.refreshInterval,
-                        in: 0.5...2.0,
-                        step: 0.5
-                    ) {
-                        Text("Update Frequency")
-                    } minimumValueLabel: {
-                        Text("0.5s")
-                            .font(.caption)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    } maximumValueLabel: {
-                        Text("2.0s")
-                            .font(.caption)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                    .onChange(of: settings.refreshInterval) { _ in
-                        NetworkMonitor.shared.updateInterval()
-                    }
-                }
-                .padding(.vertical, 4)
-                
-                Picker(selection: $settings.unitBase) {
-                    ForEach(UnitBase.allCases) { base in
-                        Text(base.rawValue).tag(base)
-                    }
-                } label: {
-                    Label("Data Unit Standard", badge: "scalemass.fill", color: .cyan)
-                }
-                .pickerStyle(.menu)
-                
-                Picker(selection: $settings.unitNaming) {
-                    ForEach(UnitNaming.allCases) { naming in
-                        Text(naming.rawValue).tag(naming)
-                    }
-                } label: {
-                    Label("Unit Naming Convention", badge: "textformat.size", color: .blue)
-                }
-                .pickerStyle(.menu)
-            } header: {
-                Text("Monitoring & Units")
-                    .font(.headline)
-            } footer: {
-                Text("Sampling rate for network socket telemetry and data unit standard.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            // Group 3: System & Integration
-            Section {
-                Toggle(isOn: $isLaunchAtLogin) {
-                    Label("Launch at Login", badge: "arrow.turn.right.up", color: .yellow)
-                }
-                .toggleStyle(.switch)
-                .onChange(of: isLaunchAtLogin) { val in
-                    LaunchAtLogin.isEnabled = val
-                }
-                
-                Toggle(isOn: $settings.showInDockWhenWindowOpen) {
-                    Label("Show in Dock When App is Open", badge: "dock.rectangle", color: .pink)
-                }
-                .toggleStyle(.switch)
-                .onChange(of: settings.showInDockWhenWindowOpen) { val in
-                    if val {
-                        NSApp.setActivationPolicy(.regular)
-                    }
+                Button("Quit Network Speed", role: .destructive) {
+                    AppDelegate.shared?.quitApp()
                 }
             } header: {
-                Text("System & Startup")
-                    .font(.headline)
-            } footer: {
-                Text("Control automatic background startup and Dock presence while the window is active.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            // Group 4: Data & Storage
-            Section {
-                HStack {
-                    Label("Reset Session Speed Totals", badge: "arrow.counterclockwise.circle.fill", color: .orange)
-                    Spacer()
-                    Button("Reset Session") {
-                        resetTarget = .session
-                        showingResetAlert = true
-                    }
-                    .buttonStyle(.bordered)
-                }
-                
-                HStack {
-                    Label("Reset Today's Recorded Usage", badge: "clock.arrow.circlepath", color: .blue)
-                    Spacer()
-                    Button("Reset Today") {
-                        resetTarget = .today
-                        showingResetAlert = true
-                    }
-                    .buttonStyle(.bordered)
-                }
-                
-                HStack {
-                    Label("Clear All Historical Data Usage", badge: "trash.fill", color: .red)
-                    Spacer()
-                    Button(role: .destructive) {
-                        resetTarget = .allHistory
-                        showingResetAlert = true
-                    } label: {
-                        Text("Clear All History")
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.red)
-                }
-            } header: {
-                Text("Data & Storage")
-                    .font(.headline)
+                Text("App Actions")
             }
         }
         .formStyle(.grouped)
-        .alert(alertTitle, isPresented: $showingResetAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button(alertConfirmButtonText, role: .destructive) {
-                performReset()
+    }
+}
+
+// MARK: - General
+
+private struct GeneralSettingsSection: View {
+    @ObservedObject private var settings = AppSettings.shared
+    @State private var isLaunchAtLogin = LaunchAtLogin.isEnabled
+
+    var body: some View {
+        Group {
+            Section {
+                Toggle("Launch at Login", isOn: $isLaunchAtLogin)
+                    .toggleStyle(.switch)
+                    .onChangeCompat(of: isLaunchAtLogin) { LaunchAtLogin.isEnabled = $0 }
+
+                Toggle("Run in Background", isOn: $settings.keepRunningInMenuBar)
+                    .toggleStyle(.switch)
+
+                Toggle("Show in Dock When App is Open", isOn: $settings.showInDockWhenWindowOpen)
+                    .toggleStyle(.switch)
+                    .onChangeCompat(of: settings.showInDockWhenWindowOpen) { enabled in
+                        // AppKit exception: no SwiftUI API for the Dock activation policy.
+                        if enabled { NSApp.setActivationPolicy(.regular) }
+                    }
+            } header: {
+                Text("Startup")
+            } footer: {
+                Text("Control automatic background startup, menu bar persistence, and Dock presence while the window is open.")
             }
+
+            Section {
+                Slider(value: $settings.refreshInterval, in: 0.5...2.0, step: 0.5) {
+                    Text("Update Frequency")
+                } minimumValueLabel: {
+                    Text("0.5s")
+                } maximumValueLabel: {
+                    Text("2.0s")
+                }
+                .onChangeCompat(of: settings.refreshInterval) { _ in
+                    NetworkMonitor.shared.updateInterval()
+                    NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                }
+
+                LabeledContent("Current Interval") {
+                    Text(String(format: "%.1fs", settings.refreshInterval))
+                        .monospacedDigit()
+                }
+            } header: {
+                Text("Monitoring")
+            } footer: {
+                Text("How often network throughput is sampled.")
+            }
+        }
+    }
+}
+
+// MARK: - Menu bar & units
+
+private struct MenuBarSettingsSection: View {
+    @ObservedObject private var settings = AppSettings.shared
+
+    var body: some View {
+        Group {
+            Section {
+                Picker("Display Style", selection: $settings.displayMode) {
+                    ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Picker("Display Order", selection: $settings.displayOrder) {
+                    ForEach(DisplayOrder.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Picker("Indicator Glyphs", selection: $settings.arrowStyle) {
+                    ForEach(ArrowStyle.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Picker("Color Theme", selection: $settings.colorMode) {
+                    ForEach(ArrowColorMode.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Toggle("Monospaced Digits", isOn: $settings.fixedWidthDigits)
+                    .toggleStyle(.switch)
+            } header: {
+                Text("Menu Bar Display")
+            } footer: {
+                Text("How bandwidth numbers and symbols appear in the menu bar.")
+            }
+
+            Section("Units") {
+                Picker("Data Unit Standard", selection: $settings.unitBase) {
+                    ForEach(UnitBase.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Picker("Unit Naming", selection: $settings.unitNaming) {
+                    ForEach(UnitNaming.allCases) { Text($0.rawValue).tag($0) }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Data
+
+private struct DataSettingsSection: View {
+    @ObservedObject private var usageTracker = DataUsageTracker.shared
+
+    private enum ResetTarget {
+        case today
+        case allHistory
+    }
+
+    @State private var resetTarget: ResetTarget = .today
+    @State private var showingDialog = false
+
+    var body: some View {
+        Group {
+            Section {
+                Button("Reset Today's Usage…", role: .destructive) {
+                    resetTarget = .today
+                    showingDialog = true
+                }
+                Button("Clear All History…", role: .destructive) {
+                    resetTarget = .allHistory
+                    showingDialog = true
+                }
+            } header: {
+                Text("Data & Storage")
+            } footer: {
+                Text("Session totals can be reset from the Dashboard.")
+            }
+        }
+        .confirmationDialog(dialogTitle, isPresented: $showingDialog, titleVisibility: .visible) {
+            Button(confirmTitle, role: .destructive, action: performReset)
         } message: {
-            Text(alertMessage)
+            Text(dialogMessage)
         }
     }
-    
-    // MARK: - Reset Alert Logic
-    
-    private var alertTitle: String {
+
+    private var dialogTitle: String {
         switch resetTarget {
-        case .session: return "Reset Session Statistics?"
-        case .today: return "Reset Today's Data Usage?"
-        case .allHistory: return "Clear All Historical Data Usage?"
+        case .today: return String(localized: "Reset Today's Data Usage?")
+        case .allHistory: return String(localized: "Clear All Historical Data Usage?")
         }
     }
-    
-    private var alertMessage: String {
+
+    private var dialogMessage: String {
         switch resetTarget {
-        case .session: return "This will reset current session throughput counters and peak speed values to zero."
-        case .today: return "This will clear all application bandwidth recorded for today (\(usageTracker.todayTotalFormatted))."
-        case .allHistory: return "This will permanently delete all stored application bandwidth logs across all dates. This action cannot be undone."
+        case .today:
+            return String(localized: "This will clear all application bandwidth recorded for today (\(usageTracker.todayTotalFormatted)).")
+        case .allHistory:
+            return String(localized: "This will permanently delete all stored application bandwidth logs across all dates. This action cannot be undone.")
         }
     }
-    
-    private var alertConfirmButtonText: String {
+
+    private var confirmTitle: String {
         switch resetTarget {
-        case .session: return "Reset Session"
-        case .today: return "Reset Today"
-        case .allHistory: return "Clear All History"
+        case .today: return String(localized: "Reset Today")
+        case .allHistory: return String(localized: "Clear All History")
         }
     }
-    
+
     private func performReset() {
         switch resetTarget {
-        case .session:
-            stats.resetSession()
-        case .today:
-            usageTracker.resetToday()
-        case .allHistory:
-            usageTracker.resetAllHistory()
+        case .today: usageTracker.resetToday()
+        case .allHistory: usageTracker.resetAllHistory()
         }
     }
 }

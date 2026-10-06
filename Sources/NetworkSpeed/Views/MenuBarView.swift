@@ -1,6 +1,9 @@
 import AppKit
 import Combine
 
+/// AppKit exception: the status item shows two stacked lines of 8.5pt text, which
+/// `MenuBarExtra`'s label cannot lay out (unverified; re-check if this is ever migrated).
+/// Colors are system colors only so it follows light/dark, accent and highlight state.
 public final class MenuBarView: NSView {
     private weak var statusItem: NSStatusItem?
     private var cancellables = Set<AnyCancellable>()
@@ -19,10 +22,7 @@ public final class MenuBarView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override public func hitTest(_ point: NSPoint) -> NSView? {
-        // Allow status bar button to receive all clicks directly
-        return nil
-    }
+
     
     private func setupSubscriptions() {
         let stats = NetworkStats.shared
@@ -101,9 +101,9 @@ public final class MenuBarView: NSView {
         let upArrowColor: NSColor
         
         if isHighlighted {
-            textColor = .white
-            downArrowColor = .white
-            upArrowColor = .white
+            textColor = .selectedMenuItemTextColor
+            downArrowColor = .selectedMenuItemTextColor
+            upArrowColor = .selectedMenuItemTextColor
         } else {
             textColor = NSColor.labelColor
             if settings.colorMode == .tinted {
@@ -119,7 +119,7 @@ public final class MenuBarView: NSView {
             let pausedFont = NSFont.systemFont(ofSize: 10, weight: .medium)
             let pausedAttrs: [NSAttributedString.Key: Any] = [
                 .font: pausedFont,
-                .foregroundColor: isHighlighted ? NSColor.white : NSColor.secondaryLabelColor
+                .foregroundColor: isHighlighted ? NSColor.selectedMenuItemTextColor : NSColor.secondaryLabelColor
             ]
             let str = "Paused" as NSString
             let size = str.size(withAttributes: pausedAttrs)
@@ -305,5 +305,157 @@ public final class MenuBarView: NSView {
         }
         let textAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
         (formatted.fullString as NSString).draw(at: NSPoint(x: curX, y: yPos), withAttributes: textAttrs)
+    }
+}
+
+import SwiftUI
+
+struct MenuBarPopoverView: View {
+    @ObservedObject var stats = NetworkStats.shared
+    @ObservedObject var settings = AppSettings.shared
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            // Header: Network connection
+            HStack {
+                let isWifi = stats.activeInterfaceBSD.hasPrefix("en")
+                Image(systemName: isWifi ? "wifi" : "network")
+                Text(stats.activeWiFiSSID ?? stats.activeInterfaceName)
+                    .font(.headline)
+                Spacer()
+                Text(stats.localIP)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+            
+            Divider().padding(.horizontal, 12)
+            
+            // Speed containers (side by side)
+            HStack(spacing: 8) {
+                SpeedContainer(
+                    title: "Download", 
+                    icon: "arrow.down.circle.fill",
+                    color: Semantic.download,
+                    speed: stats.downloadSpeed,
+                    peak: stats.peakDownloadSpeed
+                )
+                
+                SpeedContainer(
+                    title: "Upload", 
+                    icon: "arrow.up.circle.fill",
+                    color: Semantic.upload,
+                    speed: stats.uploadSpeed,
+                    peak: stats.peakUploadSpeed
+                )
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            
+            Divider().padding(.horizontal, 12)
+            
+            // Menu actions
+            VStack(spacing: 2) {
+                MenuButton(title: "Open Network Speed…", icon: "speedometer", shortcut: "o") {
+                    AppDelegate.shared?.openDashboard()
+                    AppDelegate.shared?.closePopover()
+                }
+                
+                MenuButton(title: "Settings…", icon: "gearshape", shortcut: ",") {
+                    AppDelegate.shared?.openSettings()
+                    AppDelegate.shared?.closePopover()
+                }
+                
+                Divider().padding(.vertical, 4).padding(.horizontal, 6)
+                
+                MenuButton(title: "Quit Network Speed", icon: "xmark.circle") {
+                    AppDelegate.shared?.quitApp()
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.bottom, 6)
+        }
+        .frame(width: 260)
+    }
+}
+
+private struct SpeedContainer: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let speed: Double
+    let peak: Double
+    @ObservedObject var settings = AppSettings.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            
+            let speedStr = SpeedFormatter.format(bytesPerSecond: speed, base: settings.unitBase, naming: settings.unitNaming).fullString
+            Text(speedStr)
+                .font(.system(.title3, design: .monospaced, weight: .semibold))
+                .foregroundColor(.primary)
+            
+            let peakStr = SpeedFormatter.format(bytesPerSecond: peak, base: settings.unitBase, naming: settings.unitNaming).fullString
+            Text("Peak: \(peakStr)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct MenuButton: View {
+    let title: String
+    let icon: String
+    var shortcut: String? = nil
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .frame(width: 16)
+                Text(title)
+                Spacer()
+                if let shortcut {
+                    Text("⌘\(shortcut.uppercased())")
+                        .font(.caption)
+                        .foregroundColor(isHovered ? .white.opacity(0.8) : .secondary)
+                }
+            }
+            .contentShape(Rectangle())
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .background(isHovered ? Color.accentColor : Color.clear)
+            .foregroundColor(isHovered ? .white : .primary)
+            .cornerRadius(5)
+        }
+        .buttonStyle(.plain)
+        .modifier(OptionalShortcutModifier(shortcut: shortcut))
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+}
+
+private struct OptionalShortcutModifier: ViewModifier {
+    let shortcut: String?
+    
+    func body(content: Content) -> some View {
+        if let shortcut, let char = shortcut.first {
+            content.keyboardShortcut(KeyEquivalent(char), modifiers: .command)
+        } else {
+            content
+        }
     }
 }
