@@ -43,6 +43,40 @@ public struct MainAppView: View {
                 }
             }
             .listStyle(.sidebar)
+            .safeAreaInset(edge: .top) {
+                HStack(spacing: 12) {
+                    if let appIcon = NSImage(named: "AppIcon") {
+                        Image(nsImage: appIcon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 48, height: 48)
+                    } else {
+                        Image(systemName: "speedometer")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 32, height: 32)
+                            .padding(8)
+                            .background(Color.accentColor.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Speuge")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        Text("by Shalik Faris")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                            Text("Version \(version)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding()
+            }
             .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
         } detail: {
             detailView
